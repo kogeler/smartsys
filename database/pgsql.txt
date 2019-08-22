@@ -1,0 +1,121 @@
+GRANT ALL ON DATABASE smartsys TO smartsys;
+___________________________________________________________________________________________
+
+
+
+
+___________________________________________________________________________________________
+
+
+CREATE TABLE sensors (
+    "ID" bigserial PRIMARY KEY,
+    name character varying(256) DEFAULT ''::character varying NOT NULL UNIQUE,
+    info character varying(512) DEFAULT ''::character varying NOT NULL,
+    source character varying(256) DEFAULT ''::character varying NOT NULL UNIQUE
+    type character varying(256) DEFAULT ''::character varying NOT NULL,
+    enable boolean DEFAULT FALSE NOT NULL,
+    update boolean DEFAULT FALSE NOT NULL,
+    alarm boolean DEFAULT FALSE NOT NULL,
+);
+CREATE INDEX sensors_ID_index ON sensors ("ID");
+CREATE INDEX sensors_name_index ON sensors (name);
+___________________________________________________________________________________________
+
+CREATE TABLE trig (
+    "ID" bigserial PRIMARY KEY,
+    "name" character varying(256) DEFAULT ''::character varying NOT NULL UNIQUE,
+    "info" character varying(512) DEFAULT ''::character varying NOT NULL,
+    "source" character varying(256) DEFAULT ''::character varying NOT NULL UNIQUE,
+    "alarm" boolean DEFAULT FALSE NOT NULL,
+);
+CREATE INDEX trig_ID_index ON triggers ("ID");
+CREATE INDEX trig_name_index ON triggers ("name");
+
+CREATE TABLE trig_act (
+    "ID" bigserial PRIMARY KEY,
+    "trig" bigserial REFERENCES trig ("ID") ON DELETE CASCADE,
+    "DateTime" timestamp(0) without time zone NOT NULL DEFAULT ('now'::text)::timestamp(0) without time zone,
+    "value" boolean DEFAULT FALSE NOT NULL,
+    "alarm" boolean DEFAULT FALSE NOT NULL
+);
+CREATE INDEX trig_act_ID_index ON trig_act ("ID");
+
+CREATE OR REPLACE FUNCTION trig_act_alarm() RETURNS TRIGGER AS $$
+BEGIN
+  NEW.alarm = ( SELECT "alarm" FROM "trig" WHERE "ID" = NEW.trig);
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER t_act_alarm_alarm
+BEFORE INSERT ON trig_act FOR EACH ROW EXECUTE PROCEDURE trig_act_alarm ();
+
+INSERT INTO "trig_act" ("trig", "value")
+    VALUES ( (SELECT "ID" FROM "trig" WHERE "source" = 'pin 16'), TRUE);
+
+ALTER TABLE trig ADD COLUMN "up_text" character varying(256) DEFAULT ''::character varying NOT NULL;
+ALTER TABLE trig ADD COLUMN "up_text" character varying(256) DEFAULT ''::character varying NOT NULL;
+
+______________________________________________________________________________
+DROP TABLE numbers;
+
+
+CREATE TABLE clients (
+    "ID" bigserial PRIMARY KEY,
+    "name" character varying(256) DEFAULT ''::character varying NOT NULL,
+    "type" character varying(256) DEFAULT ''::character varying NOT NULL,
+    "address" character varying(256) DEFAULT ''::character varying NOT NULL UNIQUE,
+    "state" boolean DEFAULT FALSE NOT NULL,
+);
+CREATE INDEX clients_ID_index ON clients ("ID");
+CREATE INDEX clients_address_index ON clients ("address");
+
+
+______________________________________________________________________________
+
+CREATE TABLE settings (
+    "ID" bigserial PRIMARY KEY,
+    name character varying(256) DEFAULT ''::character varying NOT NULL UNIQUE,
+    value character varying(512) DEFAULT ''::character varying NOT NULL  
+);
+CREATE INDEX settings_ID_index ON settings ("ID");
+CREATE INDEX settings_name_index ON settings ("name");
+______________________________________________________________________________
+
+INSERT INTO outbox ("DestinationNumber", "TextDecoded", "CreatorID", "Coding") VALUES ('', 'Привет', 'test1', 'Unicode_No_Compression');
+
+ALTER TABLE sensors ADD COLUMN "type" character varying(256) DEFAULT ''::character varying NOT NULL;
+______________________________________________________________________________
+
+DROP TABLE value_thp;
+DROP TABLE point;
+
+
+CREATE TABLE point (
+    "ID" bigserial PRIMARY KEY,
+    "name" character varying(256) DEFAULT ''::character varying NOT NULL UNIQUE,
+    "type" character varying(256) DEFAULT ''::character varying NOT NULL,
+    "info" character varying(256) DEFAULT ''::character varying NOT NULL,
+    "src_type" character varying(256) DEFAULT ''::character varying NOT NULL,
+    "src_addr" character varying(256) DEFAULT ''::character varying NOT NULL,
+    "src_param" character varying(256) DEFAULT ''::character varying NOT NULL
+);
+
+CREATE TABLE value_thp (
+    "ID" bigserial PRIMARY KEY,
+    "point" bigserial REFERENCES point ("ID") ON DELETE CASCADE,
+    "DateTime" timestamp(0) without time zone NOT NULL DEFAULT ('now'::text)::timestamp(0) without time zone,
+    "temp" NUMERIC(4,1) DEFAULT 0::NUMERIC(4,1) NOT NULL,
+    "humidity" NUMERIC(4,1) DEFAULT 0::NUMERIC(4,1) NOT NULL,
+    "pressure" NUMERIC(4,1) DEFAULT 0::NUMERIC(4,1) NOT NULL
+);
+
+
+______________________________________________________________________________
+
+
+show timezone;
+SET TIME ZONE 'Europe/Moscow';
+SELECT now();
+SELECT * FROM pg_timezone_names;
+ALTER DATABASE smartsys SET timezone TO 'Europe/Moscow';

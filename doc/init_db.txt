@@ -1,0 +1,15 @@
+sudo su postgres
+
+psql
+
+\list
+CREATE USER smartsys WITH password '';
+DROP DATABASE smartsys;
+CREATE DATABASE smartsys;
+ALTER DATABASE smartsys OWNER TO smartsys;
+#GRANT ALL ON DATABASE smartsys TO smartsys
+\q
+
+psql -d smartsys -f smartsys.sql -U smartsys -h localhost -W
+
+
