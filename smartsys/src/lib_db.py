@@ -4,12 +4,12 @@ import yaml
 
 close = object()
 close_init = object()
-in_log = object()
+logger = object()
 
 
 def db_init():
     try:
-        config = yaml.load(open(os.path.dirname(__file__) + '/config.yml'))
+        config = yaml.load(open(os.path.dirname(__file__) + '/config.yml'), Loader=yaml.FullLoader)
     except Exception:
         print('DB: Error open config file!')
         close(1)
@@ -18,7 +18,7 @@ def db_init():
         ssy_con = psycopg2.connect(host=config['BD']['smartsys']['host'], port=config['BD']['smartsys']['port'], dbname=config['BD']['smartsys']['dbname'], user=config['BD']['smartsys']['user'], password=config['BD']['smartsys']['password'])
         ssy_con.autocommit = True
     except Exception:
-        in_log('DB: Error opening the smartsys database in init')
+        logger.error('DB: Error opening the smartsys database in init')
         close(2)
 
 
@@ -26,7 +26,7 @@ def db_close():
     try:
         ssy_con.close()
     except Exception:
-        in_log('DB: Error while closing smartsys database')
+        logger.error('DB: Error while closing smartsys database')
 
 def db_query(query):
     res_query = []
@@ -36,7 +36,7 @@ def db_query(query):
         if cursor.rowcount > 0: res_query = cursor.fetchall()
         cursor.close()
     except Exception:
-        in_log('DB: Error query: {0}'.format(query))
+        logger.error('DB: Error query: {0}'.format(query))
         close_init(2)
         return False, None
     return True, res_query
@@ -48,7 +48,7 @@ def db_wr_query(query):
         cursor.execute(query)
         cursor.close()
     except Exception:
-        in_log('DB: Error query: {0}'.format(query))
+        logger.error('DB: Error query: {0}'.format(query))
         close_init(2)
         return False
     return True
@@ -66,10 +66,10 @@ def check_client(address):
 
 def set_notif(address='all'):
     if address == 'all':
-        in_log('DB: set notification for all', debug=True)
+        logger.debug('DB: set notification for all')
         if not db_wr_query('''UPDATE "clients" SET "state" = TRUE WHERE "state" = FALSE '''): return False
     else:
-        in_log('DB: set notification for: {0}'.format(address), debug=True)
+        logger.debug('DB: set notification for: {0}'.format(address))
         if not db_wr_query('''UPDATE "clients" SET "state" = TRUE WHERE 
                            "state" = FALSE AND "address" = '{0}' '''.format(address)): return False
     return True
@@ -77,10 +77,10 @@ def set_notif(address='all'):
 
 def unset_notif(address='all'):
     if address == 'all':
-        in_log('DB: unset notification for all', debug=True)
+        logger.deug('DB: unset notification for all')
         if not db_wr_query('''UPDATE "clients" SET "state" = FALSE WHERE "state" = TRUE '''): return False
     else:
-        in_log('DB: unset notification for: {0}'.format(address), debug=True)
+        logger.debug('DB: unset notification for: {0}'.format(address))
         if not db_wr_query('''UPDATE "clients" SET "state" = FALSE WHERE 
                            "state" = TRUE AND "address" = '{0}' '''.format(address)): return False
     return True
@@ -88,11 +88,11 @@ def unset_notif(address='all'):
 
 def set_alarm(sen='all'):
     if sen == 'all':
-        in_log('DB: set all sen', debug=True)
+        logger.debug('DB: set all sen')
         if not db_wr_query('''UPDATE "sensors" SET
                        "enable" = TRUE, "update" = FALSE, "alarm" = FALSE WHERE "enable" = FALSE '''): return False
     else:
-        in_log('DB: set one {0}'.format(sen), debug=True)
+        logger.debug('DB: set one {0}'.format(sen))
         if not db_wr_query('''UPDATE "sensors" SET "enable" = TRUE, "update" = FALSE, "alarm" = FALSE
                        WHERE "enable" = FALSE AND "name" = '{0}' '''.format(sen)): return False
     return True
@@ -100,11 +100,11 @@ def set_alarm(sen='all'):
 
 def unset_alarm(sen='all'):
     if sen == 'all':
-        in_log('DB: unset all sen', debug=True)
+        logger.debug('DB: unset all sen')
         if not db_wr_query('''UPDATE "sensors" SET
                        "enable" = FALSE, "update" = FALSE, "alarm" = FALSE WHERE "enable" = TRUE '''): return False
     else:
-        in_log('DB: unset one {0}'.format(sen), debug=True)
+        logger.debug('DB: unset one {0}'.format(sen))
         if not db_wr_query('''UPDATE "sensors" SET "enable" = FALSE, "update" = FALSE, "alarm" = FALSE
                        WHERE "enable" = TRUE AND "name" = '{0}' '''.format(sen)): return False
     return True
@@ -112,11 +112,11 @@ def unset_alarm(sen='all'):
 
 def reset_alarm(sen='all'):
     if sen == 'all':
-        in_log('DB: reset all sen', debug=True)
+        logger.debug('DB: reset all sen')
         if not db_wr_query('''UPDATE "sensors" SET "update" = FALSE, "alarm" = FALSE 
                        WHERE "enable" = TRUE AND "update" = TRUE AND "alarm" = TRUE '''): return False
     else:
-        in_log('DB: reset one {0}'.format(sen), debug=True)
+        logger.debug('DB: reset one {0}'.format(sen))
         if not db_wr_query('''UPDATE "sensors" SET "update" = FALSE, "alarm" = FALSE 
                     WHERE "enable" = TRUE AND "update" = TRUE AND "alarm" = TRUE
                     AND "name" = '{0}' '''.format(sen)): return False
@@ -168,11 +168,11 @@ def test_clients_state():
 
 def test_alarm(sen='all'):
     if sen == 'all':
-        in_log('DB: test all sen', debug=True)
+        logger.debug('DB: test all sen')
         if not db_wr_query('''UPDATE "sensors" SET "update" = TRUE WHERE
                        AND "enable" = TRUE AND "update" = FALSE'''): return False
     else:
-        in_log('DB: test one {0}'.format(sen), debug=True)
+        logger.debug('DB: test one {0}'.format(sen))
         if not db_wr_query('''UPDATE "sensors" SET "update" = TRUE WHERE "name" = '{0}'
                     AND "enable" = TRUE AND "update" = FALSE'''.format(sen)): return False
     return True

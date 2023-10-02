@@ -1,0 +1,24 @@
+BD:
+  smartsys:
+    host: 127.0.0.1
+    port: 5432
+    dbname: smartsys
+    user: postgres
+    password: postgres123
+  sms:
+    host: 127.0.0.1
+    port: 5432
+    dbname: smsd
+    user: postgres
+    password: postgres123
+sys:
+  log_path: ""
+  tg_token: ""
+  debug: true
+  test_mod: false
+  debug_msg_mod: false
+  pins: [11, 12, 13, 15, 16, 33, 35, 36, 37]
+i2c:
+  port: 1
+  pt:
+    1: 0x76

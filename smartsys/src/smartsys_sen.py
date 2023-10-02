@@ -3,6 +3,7 @@
 
 import threading
 import time
+import logging
 import lib_sys
 import lib_db
 
@@ -11,20 +12,23 @@ import bme280
 
 
 def init():
+    global logger
     global config
-    lib_sys.init('smartsys_sen.log')
+    lib_sys.init()
     config = lib_sys.config
-    lib_sys.in_log('Start')
+    logger = logging.getLogger('smartsys_sen')
+    lib_sys.setup_logger(logger)
+    logger.info('Start')
     lib_db.close = lib_sys.close
     lib_db.close_init = lib_sys.close_init
-    lib_db.in_log = lib_sys.in_log
+    lib_db.logger = logger
     lib_db.db_init()
     global i2c_bus
     try:
         i2c_bus = smbus2.SMBus(int(config['i2c']['port']))
         bme280.load_calibration_params(i2c_bus, int(config['i2c']['pt'][1]))
     except Exception:
-        lib_sys.in_log('Error opening i2c port in init')
+        logger.error('Error opening i2c port in init')
         lib_sys.close(3)
     read_thread = threading.Thread(target=read_th)
     read_thread.start()
@@ -36,7 +40,7 @@ def init():
     try:
         i2c_bus.close()
     except Exception:
-        lib_sys.in_log('Error while closing i2c port')
+        logger.error('Error while closing i2c port')
     lib_db.db_close()
     lib_sys.close()
 
@@ -71,7 +75,7 @@ def test_th():
             lib_sys.close_init()
         elif len(test_in) == 1 and test_in[0] == 'test':
             print('test')
-    lib_sys.in_log('TH: normal exit on test_th')
+    logger.info('TH: normal exit on test_th')
     return True
 
 
