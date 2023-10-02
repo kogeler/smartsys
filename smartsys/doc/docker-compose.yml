@@ -1,0 +1,63 @@
+version: '3.7'
+
+services:
+
+  smsd:
+    image: ghcr.io/kogeler/smartsys:smsd-latest
+    restart: unless-stopped
+    volumes:
+      - "./gammu-smsdrc:/opt/gammu/gammu-smsdrc"
+    devices:
+      - "/dev/ttyUSB0:/dev/ttyUSB0"
+    command:
+      - "-c"
+      - "/opt/gammu/gammu-smsdrc"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+    networks:
+      - postgresdb-net
+      - default
+
+  smartsys:
+    image: ghcr.io/kogeler/smartsys:smartsys-latest
+    restart: unless-stopped
+    volumes:
+      - "./config.yml:/app/config.yml:ro"
+    command:
+      - "smartsys.py"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+    networks:
+      - postgresdb-net
+      - default
+    dns:
+      - "1.1.1.1"
+      - "8.8.8.8"
+
+  smartsys-gpio:
+    image: ghcr.io/kogeler/smartsys:smartsys-latest
+    restart: unless-stopped
+    volumes:
+      - "./config.yml:/app/config.yml:ro"
+    privileged: true
+    command:
+      - "smartsys_gpio.py"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+    networks:
+      - postgresdb-net
+      - default
+
+networks:
+  postgresdb-net:
+    external:
+      name: postgresdb-net
