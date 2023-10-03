@@ -10,7 +10,7 @@ import lib_sms
 import lib_db
 
 
-from telegram import Update, Bot
+from telegram import Update
 from telegram.ext import (
     Application,
     MessageHandler,
@@ -22,6 +22,7 @@ from telegram.ext import (
 def init():
     global logger
     global config
+    global application
     lib_sys.init()
     config = lib_sys.config
     logger = logging.getLogger('smartsys')
@@ -35,7 +36,7 @@ def init():
     lib_sms.close_init = lib_sys.close_init
     lib_sms.logger = logger
     lib_sms.sms_init()
-
+    application = Application.builder().token(config['sys']['tg_token']).build()
 
 def handle_exceptions(func):
     '''Decorator that handles all exceptions.'''
@@ -56,9 +57,6 @@ def handle_exceptions(func):
 
 @handle_exceptions
 async def init_telegram():
-    global application
-
-    application = Application.builder().token(config['sys']['tg_token']).build()
     application.add_handler(MessageHandler(filters.ALL, t_message_handle))
     await application.initialize()
     await application.start()
@@ -103,7 +101,7 @@ async def send_msg(text, *, to='all'):
         if client[0] == 'sms':
             if not lib_sms.send_sms(text, client[1]): return False
         elif client[0] == 'telegram':
-            await Bot(token=config['sys']['tg_token']).send_message(chat_id=client[1], text=text)
+            await application.bot.send_message(chat_id=client[1], text=text)
     return True
 
 
@@ -323,9 +321,9 @@ async def test_task():
         if len(test_in) == 1 and test_in[0] == 'stop':
             lib_sys.close_init()
         elif len(test_in) == 1 and test_in[0] == 'send_sms_all':
-            await send_msg('hi2')
+            await send_msg('привет2')
         elif len(test_in) == 1 and test_in[0] == 'send_sms_only':
-            await send_msg('hi3', to='+00000000000')
+            await send_msg('привет3', to='+79115000964')
         elif len(test_in) == 1 and test_in[0] == 'sen_state':
             print(lib_db.test_sen_state())
         elif len(test_in) == 1 and test_in[0] == 'num_state':
