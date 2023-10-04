@@ -24,8 +24,6 @@ jobs:
       - name: Set environmental variables
         id: env-vars
         run: |
-          # ${{ github.repository }}
-          #echo "IMAGE_NAME=${{ matrix.images }}" >> "$GITHUB_ENV"
           echo "FULL_IMAGE_NAME=${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.images }}:latest" >> "$GITHUB_ENV"
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
