@@ -25,8 +25,8 @@ jobs:
         id: env-vars
         run: |
           # ${{ github.repository }}
-          echo "IMAGE_NAME=${{ matrix.images }}" >> "$GITHUB_ENV"
-          echo "FULL_IMAGE_NAME=${{ env.REGISTRY }}/${{ matrix.images }}:latest" >> "$GITHUB_ENV"
+          #echo "IMAGE_NAME=${{ matrix.images }}" >> "$GITHUB_ENV"
+          echo "FULL_IMAGE_NAME=${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.images }}:latest" >> "$GITHUB_ENV"
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
       - name: Set up Docker Buildx
@@ -41,7 +41,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          images: ${{ env.REGISTRY }}/${{ github.repository }}
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
