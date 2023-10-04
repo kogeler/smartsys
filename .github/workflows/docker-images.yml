@@ -7,7 +7,6 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
   RELEASE_REF: refs/heads/main
 jobs:
   build-docker-images:
@@ -25,7 +24,9 @@ jobs:
       - name: Set environmental variables
         id: env-vars
         run: |
-          echo "FULL_IMAGE_NAME=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ matrix.images }}-latest" >> "$GITHUB_ENV"
+          # ${{ github.repository }}
+          echo "IMAGE_NAME=${{ matrix.images }}" >> "$GITHUB_ENV"
+          echo "FULL_IMAGE_NAME=${{ env.REGISTRY }}/${{ matrix.images }}:latest" >> "$GITHUB_ENV"
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
       - name: Set up Docker Buildx
