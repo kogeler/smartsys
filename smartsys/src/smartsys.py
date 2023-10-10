@@ -55,7 +55,6 @@ def handle_exceptions(func):
     return wrap
 
 
-@handle_exceptions
 async def init_telegram():
     application.add_handler(MessageHandler(filters.ALL, t_message_handle))
     await application.initialize()
